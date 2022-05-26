@@ -1,0 +1,58 @@
+config LARM
+    bool
+    default y
+    select USE_DT_CODE_PARTITION
+    select BT
+    select BT_SETTINGS
+    select BT_PERIPHERAL
+    select BT_GATT_CLIENT
+    select BT_SMP
+    select BT_SMP_SC_PAIRING_ONLY
+    select FLASH
+    select FLASH_MAP
+    select SETTINGS
+    select NVS
+
+choice SETTINGS_BACKEND
+    default SETTINGS_NVS
+endchoice
+
+config RTT_LOG
+    bool "Enable RTT logging"
+    default n
+    select LOG
+    select DEBUG
+    select CONSOLE
+    select USE_SEGGER_RTT
+    select RTT_CONSOLE
+
+config NEOPIXEL
+    bool "Enable neopixel"
+    default y
+    select SPI
+    select NRFX_SPIM0
+    select LED_STRIP
+    select WS2812_STRIP
+
+config LARM_LOG_LEVEL
+    int "Larm log level"
+    default 4
+
+config LARM_LENGTH
+    int "Total length in minutes"
+    default 60
+
+config LARM_WAKE_TIME
+    int "Minutes after which the alarm will set off"
+    default 300
+
+config BLE_INIT_PRIORITY
+	int "BLE Init Priority"
+	default 50
+
+module = LARM
+module-str = larm
+source "subsys/logging/Kconfig.template.log_config"
+
+rsource "Kconfig.defconfig"
+source "Kconfig.zephyr"

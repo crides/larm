@@ -1,0 +1,183 @@
+/dts-v1/;
+#include <nordic/nrf52840_qiaa.dtsi>
+
+#include <dt-bindings/led/led.h>
+
+ / {
+	chosen {
+		zephyr,bt-mon-uart = &uart0;
+		zephyr,bt-c2h-uart = &uart0;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,code-partition = &flash_code_raw;
+        zephyr,console = &cdc_dev;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+        label = "board_leds";
+		led0: led_0 {
+			gpios = <&gpio1 15 0>;
+			label = "Red LED";
+		};
+		led1: led_1 {
+			gpios = <&gpio1 10 0>;
+			label = "Blue LED";
+		};
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+		button0: button_0 {
+			gpios = <&gpio1 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Push button switch";
+		};
+	};
+
+	aliases {
+		led0 = &led0;
+		led1 = &led1;
+		sw0 = &button0;
+	};
+};
+
+&adc {
+	status = "okay";
+};
+
+&gpiote {
+	status = "okay";
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&qspi {
+	status = "okay";
+	sck-pin = <19>;
+	io-pins = <17>, <22>, <23>, <21>;
+	csn-pins = <20>;
+	gd25q16: gd25q16@0 {
+		/* NOTE: Quad mode not supported as driver does not handle
+		 * QE bit setting in SR2. Ref. GD25Q16C, Rev 3.0, p. 12.
+		 */
+		compatible = "nordic,qspi-nor";
+		reg = <0>;
+		writeoc = "pp2o";
+		readoc = "read2io";
+		sck-frequency = <16000000>;
+		label = "GD25Q16";
+		jedec-id = [c8 40 15];
+		size = <16777216>;
+		has-dpd;
+		t-enter-dpd = <20000>;
+		t-exit-dpd = <20000>;
+	};
+};
+
+&spi0 {
+    compatible = "nordic,nrf-spim";
+    status = "okay";
+    sck-pin = <40>;
+    mosi-pin = <8>;
+    miso-pin = <41>;
+
+    neopixel: ws2812@0 {
+        compatible = "worldsemi,ws2812-spi";
+        label = "WS2812";
+        status = "okay";
+
+        /* SPI */
+        reg = <0>; /* ignored, but necessary for SPI bindings */
+        spi-max-frequency = <4000000>;
+
+        /* WS2812 */
+        chain-length = <12>; /* LED strip length */
+        spi-one-frame = <0x70>;
+        spi-zero-frame = <0x40>;
+        color-mapping = <LED_COLOR_ID_GREEN LED_COLOR_ID_RED LED_COLOR_ID_BLUE LED_COLOR_ID_WHITE>;
+    };
+};
+
+&i2c0 {
+    status = "disabled";
+};
+
+&spi1 {
+    status = "disabled";
+};
+
+&led0 {
+    status = "okay";
+};
+
+&led1 {
+    status = "okay";
+};
+
+&flash0 {
+	/*
+	 * For more information, see:
+	 * http://docs.zephyrproject.org/latest/devices/dts/flash_partitions.html
+	 */
+	my-partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		flash_sd: partition_sd@0 {
+			label = "softdevice";
+			reg = <0x00000000 0x00026000>;
+		};
+		flash_mbr: partition@0 {
+			label = "mbr";
+			reg = <0x00000000 0x00001000>;
+		};
+		flash_code_soft: partition@26000 {
+			label = "code_partition_softdevice";
+			reg = <0x00026000 0x000c6000>;
+		};
+		flash_code: partition@1000 {
+			label = "code_partition";
+			reg = <0x00001000 0x000eb000>;
+		};
+		flash_code_raw: partition_raw@0 {
+			label = "raw_code_partition";
+			reg = <0x00000000 0x000ec000>;
+		};
+
+		/*
+		 * The flash starting at 0x000ec000 and ending at
+		 * 0x000f3fff is reserved for use by the application.
+		 */
+
+		/*
+		 * Storage partition will be used by FCB/LittleFS/NVS
+		 * if enabled.
+		 */
+		flash_storage: partition@ec000 {
+			label = "storage";
+			reg = <0x000ec000 0x00008000>;
+		};
+
+		flash_boot: partition@f4000 {
+			label = "adafruit_boot";
+			reg = <0x000f4000 0x0000c000>;
+		};
+	};
+};
+
+zephyr_udc0: &usbd {
+	compatible = "nordic,nrf-usbd";
+	status = "okay";
+
+	cdc_dev: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+		label = "CDC_ACM_0";
+	};
+};
